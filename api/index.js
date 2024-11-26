@@ -9,11 +9,13 @@ const app = express(); // Define `app` aquí
 app.use(express.json());
 
 // Configura CORS
+
 const corsOptions = {
-  origin: ["https://proyectodssfront.vercel.app/", "http://localhost:3000"], // Ajusta estas URLs
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type,Authorization",
+  origin: ["https://proyectodssfront.vercel.app"], // Dominios permitidos
+  methods: "GET,POST,PUT,DELETE", // Métodos permitidos
+  allowedHeaders: "Content-Type,Authorization", // Cabeceras permitidas
 };
+
 app.use(cors(corsOptions));
 
 // Conexión a MongoDB
