@@ -1,5 +1,12 @@
 const jwt = require("jsonwebtoken");
+const express = require("express");
+const router = express.Router(); // Agrega esta línea
 
+const { getAllUsers } = require("../controllers/authController");
+
+router.get("/users", getAllUsers);
+
+module.exports = router;
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
