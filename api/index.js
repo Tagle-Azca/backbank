@@ -9,6 +9,16 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+const cors = require("cors");
+
+// Configura CORS
+const corsOptions = {
+  origin: ["https://proyectodssfront.vercel.app/", "http://localhost:3000"], // Ajusta estas URLs
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type,Authorization",
+};
+app.use(cors(corsOptions));
+
 // Conexión a MongoDB
 mongoose
   .connect(process.env.MONGO_URL)
