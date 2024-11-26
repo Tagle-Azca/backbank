@@ -1,33 +1,40 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const cors = require("cors"); // Asegúrate de tener esta línea una sola vez
+const cors = require("cors");
 
 dotenv.config();
 
-const app = express(); // Define `app` aquí
+const app = express();
 app.use(express.json());
 
-// Configura CORS
-
+// Configuración de CORS
 const corsOptions = {
-  origin: ["https://proyectodssfront.vercel.app"], // Dominios permitidos
-  methods: "GET,POST,PUT,DELETE", // Métodos permitidos
-  allowedHeaders: "Content-Type,Authorization", // Cabeceras permitidas
+  origin: ["https://proyectodssfront.vercel.app", "http://localhost:3000"],
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type,Authorization",
 };
-
 app.use(cors(corsOptions));
 
 // Conexión a MongoDB
 mongoose
-  .connect(process.env.MONGO_URL)
+  .connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("Conexión a MongoDB exitosa"))
   .catch((err) => console.error("Error al conectar a MongoDB:", err));
 
-// Rutas
+// Importar rutas
 const authRoutes = require("../routes/authRoutes");
-app.use("/api/auth", authRoutes);
+const userRoutes = require("../routes/UserRoutes");
 
-app.listen(5001, () => {
-  console.log("Servidor corriendo en el puerto 5001");
+// Registrar rutas
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+
+// Iniciar servidor
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
