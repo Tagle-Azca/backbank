@@ -17,21 +17,17 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role }, // Incluye el rol en el token
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
     res.status(200).json({
-      user: {
-        name: user.name,
-        email: user.email,
-        role: user.role, // Devuelve el rol del usuario
-      },
+      user: { id: user._id, name: user.name, role: user.role },
       token,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error al iniciar sesión", error });
+    res.status(500).json({ message: "Error en el servidor", error });
   }
 };
 

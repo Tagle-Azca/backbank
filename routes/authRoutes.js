@@ -1,18 +1,19 @@
 const express = require("express");
-const { verifyToken, isAdmin } = require("../middleware/auth");
-
 const router = express.Router();
+const { login } = require("../controllers/authController");
+const { verifyToken, isAdmin } = require("../middlewares/auth");
 
-// Ruta accesible solo para administradores
-router.get("/admin-data", verifyToken, isAdmin, (req, res) => {
-  res.json({ message: "Datos confidenciales para administradores" });
+// Ruta para login
+router.post("/login", login);
+
+// Ejemplo de una ruta protegida por token
+router.get("/protected", verifyToken, (req, res) => {
+  res.json({ message: "Acceso concedido", user: req.user });
 });
 
-// Ruta accesible para todos los usuarios autenticados
-router.get("/user-data", verifyToken, (req, res) => {
-  res.json({
-    message: "Datos disponibles para todos los usuarios autenticados",
-  });
+// Ejemplo de una ruta protegida solo para administradores
+router.get("/admin", verifyToken, isAdmin, (req, res) => {
+  res.json({ message: "Acceso solo para administradores" });
 });
 
 module.exports = router;
