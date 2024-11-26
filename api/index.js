@@ -1,15 +1,12 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const cors = require("cors");
+const cors = require("cors"); // Asegúrate de tener esta línea una sola vez
 
 dotenv.config();
 
-const app = express();
+const app = express(); // Define `app` aquí
 app.use(express.json());
-app.use(cors());
-
-const cors = require("cors");
 
 // Configura CORS
 const corsOptions = {
