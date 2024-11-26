@@ -21,5 +21,8 @@ const userRoutes = require("../routes/UserRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.get("/", (req, res) => {
+  res.send("Bienvenido a la API de Backbank");
+});
 
-module.exports = app; // Exporta la app para Vercel
+module.exports = app;
