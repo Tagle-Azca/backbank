@@ -21,8 +21,14 @@ const userRoutes = require("../routes/UserRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+
+// Ruta base
 app.get("/", (req, res) => {
   res.send("Bienvenido a la API de Backbank");
 });
 
-module.exports = app;
+// Escuchar en el puerto asignado
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
+});
