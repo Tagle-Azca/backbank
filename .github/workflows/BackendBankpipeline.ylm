@@ -1,0 +1,118 @@
+name: backendBankpipeline
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build Backend
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Linting
+        run: npm run lint
+
+      - name: Build Application
+        run: npm run build
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Unit Tests
+        run: npm test
+
+  sca:
+    name: Security Analysis - SCA
+    runs-on: ubuntu-20.04
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Security Check with npm audit
+        run: npm audit --json > audit-results.json
+        continue-on-error: true
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: npm-audit-results
+          path: audit-results.json
+        if: always()
+
+  sast:
+    name: Security Analysis - SAST
+    runs-on: ubuntu-20.04
+    needs: sca
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Static Code Analysis with ESLint
+        run: npx eslint . --format json --output-file eslint-report.json
+        continue-on-error: true
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: eslint-report
+          path: eslint-report.json
+        if: always()
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-20.04
+    needs: sast
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Run Integration Tests
+        run: npm run test:integration
+        continue-on-error: true
+
+  zap_baseline:
+    name: Dynamic Application Security Testing (DAST)
+    runs-on: ubuntu-20.04
+    needs: integration
+    steps:
+      - name: Run ZAP Baseline Scan
+        run: |
+          docker pull owasp/zap2docker-stable
+          docker run --rm -v $(pwd):/zap/wrk:rw -w /zap/wrk owasp/zap2docker-stable zap-baseline.py -t https://aplicacion-prod.com -J zap-results.json
+        continue-on-error: true
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: zap-results
+          path: zap-results.json
+        if: always()
+
+  deploy:
+    name: Deploy Backend
+    runs-on: ubuntu-20.04
+    needs: zap_baseline
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Deploy Application
+        run: echo "Deployment command for backend (e.g., Render CLI, AWS CLI, etc.)"
