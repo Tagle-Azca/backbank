@@ -8,7 +8,6 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// Configuración de CORS
 const corsOptions = {
   origin: ["https://proyectodssfront.vercel.app", "http://localhost:3000"],
   methods: "GET,POST,PUT,DELETE",
@@ -16,7 +15,6 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Conexión a MongoDB
 mongoose
   .connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
@@ -25,15 +23,12 @@ mongoose
   .then(() => console.log("Conexión a MongoDB exitosa"))
   .catch((err) => console.error("Error al conectar a MongoDB:", err));
 
-// Importar rutas
-const authRoutes = require("../routes/authRoutes");
-const userRoutes = require("../routes/UserRoutes");
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/UserRoutes");
 
-// Registrar rutas
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
-// Iniciar servidor
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);

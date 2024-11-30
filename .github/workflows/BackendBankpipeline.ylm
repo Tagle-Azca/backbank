@@ -1,7 +1,10 @@
-name: backendBankpipeline
+name: Backend CI/CD Pipeline
 
 on:
   push:
+    branches:
+      - master
+  pull_request:
     branches:
       - master
 
@@ -16,6 +19,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18"
+          cache: "npm"
 
       - name: Install Dependencies
         run: npm ci
@@ -25,6 +29,12 @@ jobs:
 
       - name: Build Application
         run: npm run build
+
+      - name: Cache Build Artifacts
+        uses: actions/cache@v3
+        with:
+          path: build
+          key: build-${{ github.sha }}
 
   test:
     name: Run Tests
@@ -37,17 +47,23 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18"
+          cache: "npm"
 
       - name: Install Dependencies
         run: npm ci
 
       - name: Run Unit Tests
-        run: npm test
+        run: npm test -- --coverage
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: coverage/
 
   sca:
     name: Security Analysis - SCA
     runs-on: ubuntu-20.04
-    needs: test
+    needs: build
     steps:
       - uses: actions/checkout@v2
 
@@ -64,7 +80,7 @@ jobs:
   sast:
     name: Security Analysis - SAST
     runs-on: ubuntu-20.04
-    needs: sca
+    needs: build
     steps:
       - uses: actions/checkout@v2
 
@@ -81,7 +97,7 @@ jobs:
   integration:
     name: Integration Tests
     runs-on: ubuntu-20.04
-    needs: sast
+    needs: [test, sca, sast]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -89,6 +105,12 @@ jobs:
       - name: Run Integration Tests
         run: npm run test:integration
         continue-on-error: true
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: integration-test-results
+          path: integration-results.json
+        if: always()
 
   zap_baseline:
     name: Dynamic Application Security Testing (DAST)
@@ -114,5 +136,25 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Setup Environment
+        run: echo "Deploying to ${{ secrets.DEPLOY_ENVIRONMENT }}"
+
       - name: Deploy Application
-        run: echo "Deployment command for backend (e.g., Render CLI, AWS CLI, etc.)"
+        run: |
+          if [ "${{ secrets.DEPLOY_ENVIRONMENT }}" == "production" ]; then
+            echo "Deploying to Production"
+            echo "render deploy --service backend-prod"
+          else
+            echo "Deploying to Staging"
+            
+            echo "render deploy --service backend-staging"
+          fi
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-20.04
+    needs: deploy
+    steps:
+      - name: Send Notification
+        if: always()
+        run: echo "Aquí podrías integrar Slack o email para enviar notificaciones."
