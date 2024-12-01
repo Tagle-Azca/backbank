@@ -31,9 +31,6 @@ jobs:
       - name: Run Prettier
         run: npm run format
 
-      - name: Build Application
-        run: npm run build
-
   audit:
     name: Security Audit
     runs-on: ubuntu-20.04
