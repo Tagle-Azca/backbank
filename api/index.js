@@ -24,10 +24,10 @@ mongoose
   .then(() => console.log("Conexión a MongoDB exitosa"))
   .catch((err) => console.error("Error al conectar a MongoDB:", err));
 
-const authRoutes = require("./routes/authRoutes");
+const authRoutes = require("../routes/authRoutes");
 app.use("/api/auth", authRoutes);
 
-const userRoutes = require("./routes/UserRoutes");
+const userRoutes = require("../routes/UserRoutes");
 
 app.use("/api/users", userRoutes);
 
