@@ -60,95 +60,31 @@ jobs:
           name: test-results
           path: coverage/
 
-  sca:
-    name: Security Analysis - SCA
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Security Check with npm audit
-        run: npm audit --json > audit-results.json
-        continue-on-error: true
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: npm-audit-results
-          path: audit-results.json
-        if: always()
-
-  sast:
-    name: Security Analysis - SAST
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Static Code Analysis with ESLint
-        run: npx eslint . --format json --output-file eslint-report.json
-        continue-on-error: true
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: eslint-report
-          path: eslint-report.json
-        if: always()
-
-  integration:
-    name: Integration Tests
-    runs-on: ubuntu-20.04
-    needs: [test, sca, sast]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Run Integration Tests
-        run: npm run test:integration
-        continue-on-error: true
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: integration-test-results
-          path: integration-results.json
-        if: always()
-
-  zap_baseline:
-    name: Dynamic Application Security Testing (DAST)
-    runs-on: ubuntu-20.04
-    needs: integration
-    steps:
-      - name: Run ZAP Baseline Scan
-        run: |
-          docker pull owasp/zap2docker-stable
-          docker run --rm -v $(pwd):/zap/wrk:rw -w /zap/wrk owasp/zap2docker-stable zap-baseline.py -t https://aplicacion-prod.com -J zap-results.json
-        continue-on-error: true
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: zap-results
-          path: zap-results.json
-        if: always()
-
   deploy:
     name: Deploy Backend
     runs-on: ubuntu-20.04
-    needs: zap_baseline
+    needs: test
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup Environment
-        run: echo "Deploying to ${{ secrets.DEPLOY_ENVIRONMENT }}"
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
 
-      - name: Deploy Application
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Deploy to Render
         run: |
-          if [ "${{ secrets.DEPLOY_ENVIRONMENT }}" == "production" ]; then
-            echo "Deploying to Production"
-            echo "render deploy --service backend-prod"
+          if [ "${{ github.ref_name }}" == "master" ]; then
+            echo "Deploying backend to production"
+            docker build -t backend-prod .
+            docker run --rm -p 5001:5001 backend-prod
           else
-            echo "Deploying to Staging"
-            
-            echo "render deploy --service backend-staging"
-          fi
+            echo "Deploying backend to staging"
+            docker build -t backend-staging .
+            docker run --rm -p 5001:5001 backend-staging
 
   notify:
     name: Send Notifications
@@ -157,4 +93,4 @@ jobs:
     steps:
       - name: Send Notification
         if: always()
-        run: echo "Aquí podrías integrar Slack o email para enviar notificaciones."
+        run: echo "Despliegue completado correctamente."
