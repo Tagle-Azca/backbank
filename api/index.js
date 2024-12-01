@@ -1,17 +1,18 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const cors = require("cors");
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
+const cors = require("cors");
+
 const corsOptions = {
   origin: ["https://proyectodssfront.vercel.app", "http://localhost:3000"],
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type,Authorization",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
 
@@ -24,6 +25,8 @@ mongoose
   .catch((err) => console.error("Error al conectar a MongoDB:", err));
 
 const authRoutes = require("./routes/authRoutes");
+app.use("/api/auth", authRoutes);
+
 const userRoutes = require("./routes/UserRoutes");
 
 app.use("/api/auth", authRoutes);
