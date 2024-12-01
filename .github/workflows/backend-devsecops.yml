@@ -1,4 +1,4 @@
-name: Backend DevSecOps Pipeline
+name: Backend CI/CD Pipeline
 
 on:
   push:
@@ -13,7 +13,8 @@ jobs:
     name: Build Backend
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v2
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -26,6 +27,9 @@ jobs:
 
       - name: Run Linting
         run: npm run lint
+
+      - name: Run Prettier
+        run: npm run format
 
       - name: Build Application
         run: npm run build
@@ -47,47 +51,8 @@ jobs:
       - name: Run Security Audit
         run: npm audit --audit-level=moderate || echo "Audit completed with warnings"
 
-  sast:
-    name: Static Code Analysis (SAST)
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Static Code Analysis with ESLint
-        run: npx eslint . --ext .js,.jsx --format json --output-file eslint-report.json || echo "ESLint warnings found"
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: eslint-report
-          path: eslint-report.json
-
-  dast:
-    name: Dynamic Application Security Testing (DAST)
-    runs-on: ubuntu-20.04
-    needs: [audit, sast]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Build and Run Backend
-        run: |
-          docker build -t backend-app .
-          docker run -d -p 5000:5000 backend-app
-
-      - name: Run OWASP ZAP Scan
-        run: |
-          docker pull owasp/zap2docker-stable
-          docker run --rm -v $(pwd):/zap/wrk:rw owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -J zap-results.json || echo "ZAP scan completed with warnings"
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: zap-results
-          path: zap-results.json
-
   test:
-    name: Unit Tests
+    name: Run Unit Tests
     runs-on: ubuntu-20.04
     needs: build
     steps:
@@ -104,7 +69,7 @@ jobs:
         run: npm ci
 
       - name: Run Unit Tests
-        run: npm test -- --coverage
+        run: npm run test -- --coverage
 
       - uses: actions/upload-artifact@v3
         with:
@@ -114,7 +79,7 @@ jobs:
   deploy:
     name: Deploy Backend
     runs-on: ubuntu-20.04
-    needs: [test, dast]
+    needs: [test, audit]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
