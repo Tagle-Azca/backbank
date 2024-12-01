@@ -75,16 +75,19 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Deploy to Render
+      - name: Build Application
+        run: npm run build
+
+      - name: Deploy to Production
         run: |
           if [ "${{ github.ref_name }}" == "master" ]; then
             echo "Deploying backend to production"
             docker build -t backend-prod .
-            docker run --rm -p 5001:5001 backend-prod
+            docker run --rm -p 5000:5000 backend-prod
           else
             echo "Deploying backend to staging"
             docker build -t backend-staging .
-            docker run --rm -p 5001:5001 backend-staging
+            docker run --rm -p 5000:5000 backend-staging
 
   notify:
     name: Send Notifications
@@ -93,4 +96,4 @@ jobs:
     steps:
       - name: Send Notification
         if: always()
-        run: echo "Despliegue completado correctamente."
+        run: echo "Despliegue del backend completado correctamente."
