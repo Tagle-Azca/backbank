@@ -1,29 +1,34 @@
+const express = require("express");
+const router = express.Router();
 const bcrypt = require("bcrypt");
-const saltRounds = 10;
-
-router.post("/register", async (req, res) => {
+const User = require("../models/User");
+// Ruta de login
+router.post("/login", async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ message: "El usuario ya está registrado." });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Contraseña incorrecta." });
+    }
 
-    const newUser = new User({
-      email,
-      password: hashedPassword,
-      role,
+    res.status(200).json({
+      message: "Inicio de sesión exitoso.",
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
     });
-
-    await newUser.save();
-    res.status(201).json({ message: "Usuario registrado con éxito." });
   } catch (err) {
-    console.error("Error en el registro:", err);
+    console.error("Error en el login:", err);
     res.status(500).json({ message: "Error interno del servidor." });
   }
 });
+
+module.exports = router;
