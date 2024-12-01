@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const express = require("express");
-const router = express.Router(); // Agrega esta línea
+const router = express.Router();
 
 const { getAllUsers } = require("../controllers/authController");
 
@@ -15,7 +15,7 @@ const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Adjunta los datos del usuario al request
+    req.user = decoded;
     next();
   } catch (error) {
     res.status(401).json({ message: "Token inválido" });
