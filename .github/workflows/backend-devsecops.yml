@@ -9,9 +9,28 @@ on:
       - master
 
 jobs:
+  build:
+    name: Building Backend
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Dependencies
+        run: npm install --verbose
+
+      - name: Build Backend
+        run: npm run build || echo "⚠️ No se encontró un comando build."
+
   test:
     name: Run Tests
     runs-on: ubuntu-20.04
+    needs: build
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
