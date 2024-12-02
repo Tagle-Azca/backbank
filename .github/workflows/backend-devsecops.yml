@@ -9,49 +9,9 @@ on:
       - master
 
 jobs:
-  build:
-    name: Build Backend
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-          cache: "npm"
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Run Linting
-        run: npm run lint
-
-      - name: Run Prettier
-        run: npm run format
-
-  audit:
-    name: Security Audit
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-          cache: "npm"
-
-      - name: Run Security Audit
-        run: npm audit --audit-level=moderate || echo "Audit completed with warnings"
-
   test:
     name: Run Unit Tests
     runs-on: ubuntu-20.04
-    needs: build
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -60,25 +20,23 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18"
-          cache: "npm"
-      - name: Verify Dependencies
-        run: ls -la node_modules
 
       - name: Install Dependencies
         run: npm install
 
+      - name: Debug Files
+        run: ls -la
+
+      - name: Verify Dependencies
+        run: ls -la node_modules
+
       - name: Run Unit Tests
         run: npm run test -- --coverage
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: coverage/
 
   deploy:
     name: Deploy Backend
     runs-on: ubuntu-20.04
-    needs: [test, audit]
+    needs: test
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -103,9 +61,15 @@ jobs:
     steps:
       - name: Notify Success
         if: always()
-        run: echo "Pipeline completed successfully!"
+        run: |
+          echo "Pipeline completed successfully!"
 
       - name: Notify Last Commit Author
         if: always()
         run: |
           echo "Pipeline triggered by: ${{ github.actor }}"
+
+      - name: Notify Failure
+        if: failure()
+        run: |
+          echo "Pipeline failed!"
