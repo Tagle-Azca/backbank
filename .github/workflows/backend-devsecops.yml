@@ -94,6 +94,7 @@ jobs:
             echo "Deploying to staging"
             docker build -t backend-prod .
             docker run --rm -p 5000:5000 backend-prod
+          fi
 
   notify:
     name: Send Notifications
