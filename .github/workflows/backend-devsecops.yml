@@ -88,12 +88,10 @@ jobs:
         run: |
           if [ "${{ github.ref }}" == "refs/heads/master" ]; then
             echo "Deploying to production"
-            docker build -t backend-prod .
-            docker run --rm -p 5000:5000 backend-prod
+            npm run start:prod 
           else
             echo "Deploying to staging"
-            docker build -t backend-prod .
-            docker run --rm -p 5000:5000 backend-prod
+            npm run start:dev
           fi
 
   notify:
