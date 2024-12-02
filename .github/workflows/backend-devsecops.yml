@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: Run Simulated Unit Tests
+    name: Run Tests
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Code
@@ -33,27 +33,43 @@ jobs:
       - name: Debug Files
         run: ls -la
 
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-20.04
+    needs: test
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Run Security Audit
+        run: npm audit --audit-level=moderate || echo "⚠️ los Audit se completaron con avisos!"
+
   notify-success:
     name: Notify Success
     runs-on: ubuntu-20.04
-    needs: test
+    needs: [test, security-audit]
     if: success()
     steps:
       - name: Notify Success
         run: |
-          echo "✅ las pruebas pasaron con exito!"
-          echo "El utimo comit lo hizo: ${{ github.actor }}"
+          echo "✅ ¡Las pruebas y auditoría pasaron con éxito!"
+          echo "El último commit lo hizo: ${{ github.actor }}"
 
   notify-failure:
     name: Notify Failure
     runs-on: ubuntu-20.04
-    needs: test
+    needs: [test, security-audit]
     if: failure()
     steps:
       - name: Notify Failure
         run: |
-          echo "❌ Las pruebas fallaraon!"
-          echo "El utimo comit lo hizo: ${{ github.actor }}"
+          echo "❌ Las pruebas o la auditoría fallaron."
+          echo "El último commit lo hizo: ${{ github.actor }}"
 
   notify-changes:
     name: Notify Changes
@@ -61,5 +77,5 @@ jobs:
     steps:
       - name: Notify Changes
         run: |
-          echo "🔔 un pull o push activo el pipeline"
-          echo "Changes made by: ${{ github.actor }}"
+          echo "🔔 Un pull o push activó el pipeline."
+          echo "Cambios hechos por: ${{ github.actor }}"
