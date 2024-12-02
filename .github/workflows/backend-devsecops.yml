@@ -86,14 +86,14 @@ jobs:
 
       - name: Deploy Backend
         run: |
-          if [ "${{ github.ref_name }}" == "master" ]; then
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
             echo "Deploying to production"
             docker build -t backend-prod .
             docker run --rm -p 5000:5000 backend-prod
           else
             echo "Deploying to staging"
-            docker build -t backend-staging .
-            docker run --rm -p 5000:5000 backend-staging
+            docker build -t backend-prod .
+            docker run --rm -p 5000:5000 backend-prod
 
   notify:
     name: Send Notifications
