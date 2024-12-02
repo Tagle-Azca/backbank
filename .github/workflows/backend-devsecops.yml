@@ -99,6 +99,11 @@ jobs:
     runs-on: ubuntu-20.04
     needs: deploy
     steps:
-      - name: Send Notification
+      - name: Notify Success
         if: always()
         run: echo "Pipeline completed successfully!"
+
+      - name: Notify Last Commit Author
+        if: always()
+        run: |
+          echo "Pipeline triggered by: ${{ github.actor }}"
